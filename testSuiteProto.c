@@ -14,6 +14,12 @@
 #define SW5 (IOPIN1 & (1 << 19))
 #define SW6 (IOPIN1 & (1 << 20))
 
+//LCD pins
+#define RS_ON (IO0SET = 1U << 20)
+#define RS_OFF (IO0CLR = 1U << 20)
+#define EN_ON (IO1SET = 1U << 25)
+#define EN_OFF (IO1CLR = 1U << 25)
+
 // The following variables are used in Up-Down and Ring Counter program
 int contUP = 0;
 int contDN = 99;
@@ -29,6 +35,17 @@ unsigned char lookup_table[4][4] = {{'0', '1', '2', '3'},
                                     {'8', '9', 'a', 'b'},
                                     {'c', 'd', 'e', 'f'}};
 
+																		
+// LCD Declarations			
+static void delay_us(unsigned int count); // microsecond delay
+static void LCD_SendCmdSignals(void);
+static void LCD_SendDataSignals(void);
+static void LCD_SendHigherNibble(unsigned char dataByte);
+static void LCD_CmdWrite(unsigned char cmdByte);
+static void LCD_DataWrite(unsigned char dataByte);
+static void LCD_Reset(void);
+static void LCD_Init(void);
+void LCD_DisplayString(const char *ptr_stringPointer_u8);
 void delay_ms(unsigned int j)
 {
     unsigned int x, i;
@@ -220,11 +237,13 @@ void alphadisp7SEG(char *buf)
             IOCLR0 |= 1 << 20;          // IOCLR0 | 0x00100000;
             seg7_data = seg7_data << 1; // get next bit into D7 position
         }
-    }
-    // Strobe Signal
+				 // Strobe Signal
     IOSET0 |= 1 << 30; // IOSET0 | 0x40000000;
     delay_ms(1);       // nop();
     IOCLR0 |= 1 << 30; // IOCLR0 | 0x40000000;
+			delay_ms(200);
+    }
+   
     return;
 }
 
@@ -368,8 +387,114 @@ void stepperMotorTest()
             break;
     } while (1);
     IO0CLR = 0X00FF0000;
+		
+    return;
+}
+
+
+static void LCD_CmdWrite(unsigned char cmdByte)
+{
+    LCD_SendHigherNibble(cmdByte);
+    LCD_SendCmdSignals();
+    cmdByte = cmdByte << 4;
+    LCD_SendHigherNibble(cmdByte);
+    LCD_SendCmdSignals();
+}
+static void LCD_DataWrite(unsigned char dataByte)
+{
+    LCD_SendHigherNibble(dataByte);
+    LCD_SendDataSignals();
+    dataByte = dataByte << 4;
+    LCD_SendHigherNibble(dataByte);
+    LCD_SendDataSignals();
+}
+static void LCD_Reset(void)
+{
+    /* LCD reset sequence for 4-bit mode*/
+    LCD_SendHigherNibble(0x30);
+    LCD_SendCmdSignals();
+    delay_ms(100);
+    LCD_SendHigherNibble(0x30);
+    LCD_SendCmdSignals();
+    delay_us(200);
+    LCD_SendHigherNibble(0x30);
+    LCD_SendCmdSignals();
+    delay_us(200);
+    LCD_SendHigherNibble(0x20);
+    LCD_SendCmdSignals();
+    delay_us(200);
+}
+static void LCD_SendHigherNibble(unsigned char dataByte)
+{
+    // send the D7,6,5,D4(uppernibble) to P0.16 to P0.19
+    IO0CLR = 0X000F0000;
+    IO0SET = ((dataByte >> 4) & 0x0f) << 16;
+}
+static void LCD_SendCmdSignals(void)
+{
+    RS_OFF; // RS - 1
+    EN_ON;
+    delay_us(100);
+    EN_OFF; // EN - 1 then 0
+}
+
+static void LCD_SendDataSignals(void)
+{
+    RS_ON; // RS - 1
+    EN_ON;
+    delay_us(100);
+    EN_OFF; // EN - 1 then 0
+}
+static void LCD_Init(void)
+{
+    delay_ms(100);
+    LCD_Reset();
+    LCD_CmdWrite(0x28u); // Initialize the LCD for 4-bit 5x7 matrix type
+    LCD_CmdWrite(0x0Eu); // Display ON cursor ON
+    LCD_CmdWrite(0x01u); // Clear the LCD
+    LCD_CmdWrite(0x80u); // go to First line First Position
+}
+
+void LCD_DisplayString(const char *ptr_string)
+{
+    // Loop through the string and display char by char
+    while ((*ptr_string) != 0)
+        LCD_DataWrite(*ptr_string++);
+}
+static void delay_us(unsigned int count)
+{
+    unsigned int j = 0, i = 0;
+    for (j = 0; j < count; j++)
+    {
+        for (i = 0; i < 10; i++)
+            ;
+    }
+}
+
+
+void lcdTest()
+{
+    SystemInit();
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
+    // make D7 Led on off for testing
+    
+   
+    
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("RV College Of Engrng");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString(" Computer Sciene");
+    LCD_CmdWrite(0x94);
+    LCD_DisplayString(" 4th Semester");
+    LCD_CmdWrite(0xD4);
+    LCD_DisplayString(" B Section");
     while (1)
-        ;
+       if(!SW6)
+					break;
 }
 
 int main()
@@ -380,11 +505,17 @@ int main()
         switch (test)
         {
         case '1':
-            counterProgram() break;
+            counterProgram(); 
+				break;
         case '2':
-            sevenSegDisplay() break;
+            sevenSegDisplay(); 
+				break;
         case '3':
-            stepperMotorTest() break;
+            stepperMotorTest(); 
+				break;
+				case '7':
+						lcdTest();
+							break;
         default:
             break;
         }
