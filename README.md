@@ -45,4 +45,4 @@ Select the appropriate COM port and the baud rate.
 
 Compile the code with microLib, appropriate linker file and startup file and the default memorylayout.
 
-@KTS-o7,@NeeleshRao,@CodingRiovo and @using-namespace-lyx contributed to this repository.
+@KTS-o7,@NeeleshRao,@CodingRiovo, @Sarangspin and @using-namespace-lyx contributed to this repository.
