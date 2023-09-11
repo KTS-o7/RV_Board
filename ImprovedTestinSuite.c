@@ -587,13 +587,12 @@ void DACWaveOut()
         }
         else if (!SW3)
         {
-            while (i != 30)
-            {
-                value = sine_rect_table[i++];
-                DACR = ((1 << 16) | (value << 6));
-                delay_ms(1);
-            }
-            i = 0;
+            value = 1023;
+            DACR = ((1 << 16) | (value << 6));
+            delay_ms(1);
+            value = 0;
+            DACR = ((1 << 16) | (value << 6));
+            delay_ms(1);
         }
         else if (!SW4) /* If switch for triangular wave is pressed */
         {
@@ -620,12 +619,7 @@ void DACWaveOut()
         }
         else if (!SW6) /* If switch for square wave is pressed */
         {
-            value = 1023;
-            DACR = ((1 << 16) | (value << 6));
-            delay_ms(1);
-            value = 0;
-            DACR = ((1 << 16) | (value << 6));
-            delay_ms(1);
+            return;
         }
         else /* If no switch is pressed, 3.3V DC */
         {
