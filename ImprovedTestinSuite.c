@@ -885,6 +885,19 @@ void MenuDisplay()
     LCD_CmdWrite(0xD4);
     LCD_DisplayString("9-Prox A-Relay");
 }
+
+void InstructionWrite(char *buf)
+{
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString(buf);
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to exit");
+}
 int main()
 { // Print instructions to run the program
     SystemInit();
@@ -905,33 +918,43 @@ int main()
         switch (test)
         {
         case '1':
+            InstructionWrite("Counter Prgm");
             counterProgram();
             break;
         case '2':
-            sevenSegDisplay();
+            InstructionWrite("7Seg Prgm")
+                sevenSegDisplay();
             break;
         case '3':
+            InstructionWrite("Stepper Motor");
             stepperMotorTest();
             break;
         case '4':
+            InstructionWrite("DAC Prgm");
             DACWaveOut();
             break;
         case '5':
+            InstructionWrite("RGB Prgm");
             RGB();
             break;
         case '6':
+            InstructionWrite("DC Motor Prgm");
             AdcWithDCMotor();
             break;
         case '7':
+            InstructionWrite("LCD Prgm");
             lcdTest();
             break;
         case '8':
+            // InstructionWrite("ADC Prgm");
             cycleADC();
             break;
         case '9':
+            InstructionWrite("Proximity Prgm");
             readSensor();
             break;
         case 'a':
+            InstructionWrite("Relay Prgm");
             relay();
             break;
         default:
@@ -956,6 +979,10 @@ void cycleADC()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
+    LCD_DisplayString("ADC Prgm");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to exit");
+    LCD_CmdWrite(0x94);
     LCD_DisplayString("cycle ADC");
     while (1)
     {
