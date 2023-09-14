@@ -1,4 +1,5 @@
 #include <lpc214x.h>
+#include <stdio.h>
 #define PLOCK 0x00000400
 
 // Matrix Columns
@@ -55,8 +56,12 @@ static void LCD_CmdWrite(unsigned char cmdByte);
 static void LCD_DataWrite(unsigned char dataByte);
 static void LCD_Reset(void);
 static void LCD_Init(void);
+void MenuDisplay();
+void cycleADC();
 void LCD_DisplayString(const char *ptr_stringPointer_u8);
+void DACWaveOut();
 void delay_ms(unsigned int j)
+
 {
     unsigned int x, i;
     for (i = 0; i < j; i++)
@@ -214,17 +219,34 @@ unsigned char getAlphaCode(unsigned char alphachar)
     switch (alphachar)
     {
     // dp g f e d c b a - common anode: 0 segment on, 1 segment off
-    case '8':
-        return 0x00; // Switches on all the segments of one display along with decimal point.
+    // Switches on all the segments of one display along with decimal point.
     case ' ':
         return 0xff;
-    // simmilarly add for other digit/characters
+        // simmilarly add for other digit/characters
+    case '0':
+        return 0xC0;
+    case '1':
+        return 0xf9;
+    case '2':
+        return 0xA4;
+    case '3':
+        return 0xB0; // 1000 0110
+    case '4':
+        return 0x99;
+    case '5':
+        return 0x92;
+    case '6':
+        return 0x82;
+    case '7':
+        return 0xf8;
+    case '8':
+        return 0x80;
+    case '9':
+        return 0x90;
     default:
-        break;
+        return 0xff;
     }
-    return 0xff;
 }
-
 void alphadisp7SEG(char *buf)
 {
     unsigned char i, j;
@@ -280,6 +302,15 @@ int counterProgram()
 {
     IO0DIR = 0xFF << 16;
     IO0SET = 0xFF << 16;
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("Counter");
 
     while (1)
     {
@@ -320,7 +351,10 @@ int counterProgram()
                 rightSFT = 0x01 << 7;
         }
         if (!SW6)
+        {
+            MenuDisplay();
             break;
+        }
         delay_ms(200);
     }
     return 0;
@@ -330,7 +364,15 @@ int counterProgram()
 void sevenSegDisplay()
 {
     IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
-
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("7Seg");
     while (1)
     {
         alphadisp7SEG("88888");
@@ -338,7 +380,10 @@ void sevenSegDisplay()
         alphadisp7SEG("     ");
         delay_ms(300);
         if (!SW6)
+        {
+            MenuDisplay();
             break;
+        }
     }
 }
 
@@ -346,7 +391,13 @@ void stepperMotorTest()
 {
     unsigned int no_of_steps_clk = 200, no_of_steps_aclk = 200;
     IO0DIR |= 1U << 31 | 0x00FF0000 | 1U << 30; // to set P0.16 to P0.23 as o/ps
-
+    IO0DIR |= 1U << 31 | 0x00FF0000;            // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("Stepper Motor");
     SystemInit();
 
     do
@@ -395,6 +446,11 @@ void stepperMotorTest()
         delay_ms(10);
         if (--no_of_steps_aclk == 0)
             break;
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
     } while (1);
     IO0CLR = 0X00FF0000;
 
@@ -526,8 +582,16 @@ static void delay_us(unsigned int count)
 void AdcWithDCMotor()
 {
     int dig_val;
-    IO0DIR |= 1U << 31 | 0x00FF0000 | 1U << 30; // to set P0.16 to P0.23 as o/ps
-
+    IO0DIR |= 1U << 31 | 0x00FF0000 | 1U << 30;          // to set P0.16 to P0.23 as o/ps
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("ADC DC Motor");
     delay_ms(500);
 
     SystemInit();
@@ -539,40 +603,63 @@ void AdcWithDCMotor()
             dig_val = 100;
         runDCMotor(2, dig_val); // run at 10% duty cycle
         if (!SW6)
+        {
+            MenuDisplay();
             break;
+        }
     } while (1);
 }
 
 void lcdTest()
 {
     SystemInit();
+    IO0DIR |= 1U << 31 | 0x00FF0000;                     // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;                                  // to set P1.25 as o/p used for EN
+                                                         // make D7 Led on off for testing
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
     IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
-    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
-    // make D7 Led on off for testing
-
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("LCD Testing");
+    delay_ms(1000);
     LCD_Reset();
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
     LCD_DisplayString("RV College Of Engrng");
     LCD_CmdWrite(0xc0);
-    LCD_DisplayString(" Computer Sciene");
+    LCD_DisplayString(" Computer Science");
     LCD_CmdWrite(0x94);
-    LCD_DisplayString(" 4th Semester");
+    LCD_DisplayString(" 4th Sem 2022-23");
     LCD_CmdWrite(0xD4);
     LCD_DisplayString(" B Section");
     while (1)
         if (!SW6)
+        {
+            MenuDisplay();
             break;
+        }
 }
 
 void DACWaveOut()
 {
     short int value, i = 0;
     SystemInit();
-    PINSEL1 |= 0x00080000;           /* P0.25 as DAC output :option 3 - 10 (bits18,19)*/
+    PINSEL1 |= 0x00080000;                               /* P0.25 as DAC output :option 3 - 10 (bits18,19)*/
+    IO0DIR |= 1U << 31 | 0x00FF0000;                     // to set P0.16 to P0.23 as o/ps
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
     IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
-
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("DAC Test");
     while (1)
     {
         if (!SW2) /* If switch for sine wave is pressed */
@@ -617,50 +704,199 @@ void DACWaveOut()
                 value++;
             }
         }
-        else if (!SW6) /* If switch for square wave is pressed */
-        {
-            return;
-        }
+
         else /* If no switch is pressed, 3.3V DC */
         {
             value = 1023;
             DACR = ((1 << 16) | (value << 6));
         }
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
     }
 }
-void lcdInstruction(char *buf)
-{
-    // SystemInit();
-    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
-    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
-    // make D7 Led on off for testing
 
+// void readSensor(){
+//  int result = 0;
+//	IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30 | 1U << 24; // to set as o/ps
+//	while(1){
+//	IO0SET |= 1<<31;
+//	IO1CLR = 1<<24;
+//	result = IO1PIN &(1<<22);
+//	IO1SET = 1<<24;
+//		if(result) IO0CLR |= 1<<31;
+//		delay_ms(100);
+//	char buf[1];
+//	sprintf(buf, "%d", result);
+//	alphadisp7SEG(buf);
+//	alphadisp7SEG("     ");
+
+//		if(!SW6) break;
+//	}
+//}
+
+void readSensor()
+{
+
+    int result = 0;
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30 | 1U << 24;
+    IO1DIR |= 1 << 24;
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
     LCD_Reset();
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString(buf);
-    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Proximity Sensor");
+    while (1)
+    {
+        IO1CLR = 1 << 24; // enable sensor logic: P1.24 - 0
+
+        result = IO1PIN & (1 << 22); // P1.22 connected to sensor1
+
+        IO1SET = 1 << 24; // disabl sensor logic: P1.24
+        if (result)
+            alphadisp7SEG(" 1 ");
+        else
+            alphadisp7SEG(" 0 ");
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
+    }
 }
 
+void PWM_Init(void)
+{
+    PINSEL0 |= 2 << 18 | 2 << 16;
+    // SELECT P0.8 PWM4 AND P0.9PWM6 AS 2ND OPTION FOR PWM OPERATION
+    PINSEL1 |= 1 << 10;                     // SELECT P0.21 PWM5 AS OPTION 1 FOR PWM OPERATION
+    PWMPCR = (1 << 12 | 1 << 13 | 1 << 14); // Enable PWM4,PWM5 and PWM
+    PWMMR0 = 100;                           // load the value to MR0 to fix the pulse rate
+    PWMTCR = 0x00000009;                    // bit D3 = 1 (enable PWM), bit D0=1 (start the timer)
+}
+
+void RGB(void)
+{
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("RGB Light");
+    unsigned int i;
+    PWM_Init();
+    while (1)
+    {
+        for (i = 0; i <= 100; i = i + 1)
+        {
+            PWMMR4 = 100;
+            PWMMR5 = i;
+            PWMMR6 = 100;
+            PWMLER = 0X70; // to enable copy to Match registers from shadow regs. 1110000
+            delay_ms(10);
+        }
+        for (i = 0; i <= 100; i = i + 1)
+        {
+            PWMMR4 = 100;
+            PWMMR5 = 100;
+            PWMMR6 = i;
+            PWMLER = 0X70; // to enable copy to Match registers from shadow regs. 1110000
+            delay_ms(10);
+        }
+        for (i = 0; i <= 100; i = i + 1)
+        {
+            PWMMR4 = i;
+            PWMMR5 = 100;
+            PWMMR6 = 100;
+            PWMLER = 0X70; // to enable copy to Match registers from shadow regs. 1110000
+            delay_ms(10);
+        }
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
+    }
+}
+
+void relay()
+{
+    int result = 1;
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30 | 1U << 24;
+
+    IO0DIR |= 1U << 0;                                   // configure P0.0 as output, connected to Relay
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("Relay Test");
+    while (1)
+    {
+
+        // P0.1 connected to sensor1
+
+        if (result)
+            IO0CLR = 1U << 0;
+
+        else
+            IO0SET = 1U << 0;
+        delay_ms(100);
+        if (result)
+            alphadisp7SEG(" 1 ");
+        else
+            alphadisp7SEG(" 0 ");
+
+        result = !result;
+
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
+    }
+}
+
+void MenuDisplay()
+{
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("1-Counter 2-7Seg ");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("3-step 4-DAC 5-RGB");
+    LCD_CmdWrite(0x94);
+    LCD_DisplayString(" 6-DC 7-LCD 8-ADC");
+    LCD_CmdWrite(0xD4);
+    LCD_DisplayString("9-Prox A-Relay");
+}
 int main()
 { // Print instructions to run the program
-    lcdInstruction("Test begins : ");
-    delay_ms(2000);
-    lcdInstruction("Press 1 Counter");
-    delay_ms(1000);
-    lcdInstruction("Press 2 7Seg");
-    delay_ms(1000);
-    lcdInstruction("Press 3 Stepper");
-    delay_ms(1000);
-    lcdInstruction("Press 4 DAC");
-    delay_ms(1000);
-    lcdInstruction("Press 6 DC Motor");
-    delay_ms(1000);
-    lcdInstruction("Press 7 LCD");
-    delay_ms(1000);
-    lcdInstruction("Press f to exit");
+    SystemInit();
     LCD_Reset();
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("Welcome to");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("RV Board Testing");
+    LCD_CmdWrite(0x94);
+    LCD_DisplayString("Suite.");
+    delay_ms(500);
+    MenuDisplay();
 
     while (1)
     {
@@ -680,11 +916,23 @@ int main()
         case '4':
             DACWaveOut();
             break;
+        case '5':
+            RGB();
+            break;
         case '6':
             AdcWithDCMotor();
             break;
         case '7':
             lcdTest();
+            break;
+        case '8':
+            cycleADC();
+            break;
+        case '9':
+            readSensor();
+            break;
+        case 'a':
+            relay();
             break;
         default:
             break;
@@ -693,4 +941,57 @@ int main()
             break;
     }
     return 0;
+}
+
+void cycleADC()
+{
+    int no = 1;
+    int ch = 2;
+    unsigned int val;
+    IO0DIR |= 1U << 31 | 1U << 19 | 1U << 20 | 1U << 30; // to set as o/ps
+    PINSEL0 |= 0x0F300000;
+    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
+    IO1DIR |= 1U << 25;
+    LCD_Reset();
+    LCD_Init();
+    delay_ms(100);
+    LCD_CmdWrite(0x80);
+    LCD_DisplayString("cycle ADC");
+    while (1)
+    {
+        AD1CR = 0x00200600 | (1 << ch); // select channel
+        AD1CR |= (1 << 24);             // start conversion
+        while ((AD1GDR & (1U << 31)) == 0)
+            ;
+        val = AD1GDR;
+        val = (val >> 6) & 0x03FF; // bit 6:15 is 10 bit AD value
+        char buf[5];
+        switch (ch)
+        {
+        case 2:
+            alphadisp7SEG("  02 ");
+            break;
+        case 3:
+            alphadisp7SEG("  03 ");
+            break;
+        case 4:
+            alphadisp7SEG("  04 ");
+            break;
+        }
+        sprintf(buf, "%5d", val);
+        delay_ms(2);
+        alphadisp7SEG(buf);
+        ch++;
+        if (ch > 4)
+            ch = 2;
+
+        if (!SW6)
+        {
+            MenuDisplay();
+            break;
+        }
+    }
+    // adc(1,4) for temp sensor LM34, digital value will increase as temp increases
+    // adc(1,3) for LDR - digival value will reduce as the light increases
+    // adc(1,2) for trimpot - digital value changes as the pot rotation
 }
