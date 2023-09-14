@@ -44,6 +44,13 @@ RV all in one IoT board is powered by LPC 2148 Microcontroller and supports wide
 - `SW5` will generate a sawtooth wave.
 - `SW6` will exit the DAC test.
 
+## 5. RGB LED
+
+- Select `5` in the Matrix keypad to test the RGB LED.
+- This will start the RGB LED Program
+- One should be able to observe all 3 color shifts when 3 Jumpers are plugged in.
+- `SW6` will exit the RGB LED test.
+
 ## 6. Testing the ADC and DC Motor
 
 - Select `6` in the Matrix keypad to test the ADC.
@@ -59,3 +66,25 @@ RV all in one IoT board is powered by LPC 2148 Microcontroller and supports wide
 - This will start the LCD Program.
 - The LCD will display the string `RV College Of Engrng` , `Computer Sciene`,`4th Semester` and `B Section`.
 - `SW6` will exit the program.
+
+## 8. Cycle ADC
+
+- Select `8` in the Matrix keypad to test all ADC channels.
+- This will start the ADC Program.
+- ADC is connected to a Potentiometer, LDR and a Temperature sensor.
+- The values will be displayed on the 7 segment Display.
+- Press `SW6` to exit the program.
+
+## 9. Proximity sensor
+
+- Select `9` in the Matrix keypad to test the Proximity sensor.
+- This will start the Proximity sensor Program.
+- The value of the proximity sensor will be displayed on the 7 segment Display.
+- Press `Sw6` to exit the program.
+
+## 10. Relay
+
+- Select `a` in the Matrix keypad to test the Relay.
+- This will start the Relay Program.
+- The relay will be turned on and off alternatively.
+- Press `SW6` to exit the program.
