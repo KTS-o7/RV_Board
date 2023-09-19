@@ -310,7 +310,16 @@ int counterProgram()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("Counter");
+    LCD_DisplayString("Counter Testing..");
+	  
+	  LCD_CmdWrite(0xc0);
+    LCD_DisplayString("SW2-BCDUp  SW3-BCDDn");
+	  LCD_CmdWrite(0x94);
+    LCD_DisplayString("SW4-LRing  SW5-RRing");
+	  LCD_CmdWrite(0xd4);
+    LCD_DisplayString("Press SW6 to Exit");
+	  
+	  
 
     while (1)
     {
@@ -372,7 +381,10 @@ void sevenSegDisplay()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("7Seg");
+    LCD_DisplayString("7Seg Testing..");
+	LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Prsee SW6 to Exit");
+	  
     while (1)
     {
         alphadisp7SEG("88888");
@@ -397,7 +409,9 @@ void stepperMotorTest()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("Stepper Motor");
+    LCD_DisplayString("StprMtr Testing..");
+	LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to Exit");
     SystemInit();
 
     do
@@ -591,7 +605,10 @@ void AdcWithDCMotor()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("ADC DC Motor");
+    LCD_DisplayString("DC Motor Testing..");
+	  LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to Exit");
+	  
     delay_ms(500);
 
     SystemInit();
@@ -659,7 +676,9 @@ void DACWaveOut()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("DAC Test");
+    LCD_DisplayString("DAC Testing..");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to exit");
     while (1)
     {
         if (!SW2) /* If switch for sine wave is pressed */
@@ -751,7 +770,11 @@ void readSensor()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("Proximity Sensor");
+    LCD_DisplayString("ProxSensor Testing");
+
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to Exit");
+
     while (1)
     {
         IO1CLR = 1 << 24; // enable sensor logic: P1.24 - 0
@@ -791,7 +814,9 @@ void RGB(void)
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("RGB Light");
+    LCD_DisplayString("RGB Testing...");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW6 to Exit");
     unsigned int i;
     PWM_Init();
     while (1)
@@ -842,7 +867,9 @@ void relay()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("Relay Test");
+    LCD_DisplayString("Relay Testing...");
+    LCD_CmdWrite(0xc0);
+    LCD_DisplayString("Press SW 6 to Exit");
     while (1)
     {
 
@@ -876,27 +903,15 @@ void MenuDisplay()
     LCD_Reset();
     LCD_Init();
     delay_ms(100);
+
     LCD_CmdWrite(0x80);
     LCD_DisplayString("1-Counter 2-7Seg ");
     LCD_CmdWrite(0xc0);
-    LCD_DisplayString("3-step 4-DAC 5-RGB");
+    LCD_DisplayString("3-Stepper 4-DAC 5-RGB");
     LCD_CmdWrite(0x94);
     LCD_DisplayString(" 6-DC 7-LCD 8-ADC");
     LCD_CmdWrite(0xD4);
     LCD_DisplayString("9-Prox A-Relay");
-}
-
-void InstructionWrite(char *buf)
-{
-    IO0DIR |= 1U << 31 | 0x00FF0000; // to set P0.16 to P0.23 as o/ps
-    IO1DIR |= 1U << 25;              // to set P1.25 as o/p used for EN
-    LCD_Reset();
-    LCD_Init();
-    delay_ms(100);
-    LCD_CmdWrite(0x80);
-    LCD_DisplayString(buf);
-    LCD_CmdWrite(0xc0);
-    LCD_DisplayString("Press SW6 to exit");
 }
 int main()
 { // Print instructions to run the program
@@ -918,43 +933,33 @@ int main()
         switch (test)
         {
         case '1':
-            InstructionWrite("Counter Prgm");
             counterProgram();
             break;
         case '2':
-            InstructionWrite("7Seg Prgm")
-                sevenSegDisplay();
+            sevenSegDisplay();
             break;
         case '3':
-            InstructionWrite("Stepper Motor");
             stepperMotorTest();
             break;
         case '4':
-            InstructionWrite("DAC Prgm");
             DACWaveOut();
             break;
         case '5':
-            InstructionWrite("RGB Prgm");
             RGB();
             break;
         case '6':
-            InstructionWrite("DC Motor Prgm");
             AdcWithDCMotor();
             break;
         case '7':
-            InstructionWrite("LCD Prgm");
             lcdTest();
             break;
         case '8':
-            // InstructionWrite("ADC Prgm");
             cycleADC();
             break;
         case '9':
-            InstructionWrite("Proximity Prgm");
             readSensor();
             break;
         case 'a':
-            InstructionWrite("Relay Prgm");
             relay();
             break;
         default:
@@ -979,11 +984,10 @@ void cycleADC()
     LCD_Init();
     delay_ms(100);
     LCD_CmdWrite(0x80);
-    LCD_DisplayString("ADC Prgm");
-    LCD_CmdWrite(0xc0);
-    LCD_DisplayString("Press SW6 to exit");
-    LCD_CmdWrite(0x94);
-    LCD_DisplayString("cycle ADC");
+    LCD_DisplayString("ADC Testing...");
+    LCD_CmdWrite(0xC0);
+    LCD_DisplayString("Press SW6 to Exit");
+
     while (1)
     {
         AD1CR = 0x00200600 | (1 << ch); // select channel
