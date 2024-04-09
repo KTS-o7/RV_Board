@@ -1,6 +1,13 @@
 # RV_Board
 
 This is the Repository of RV Board Testing program Development
+## Stats :
+![GitHub Languages](https://img.shields.io/github/languages/count/KTS-o7/RV_Board)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/KTS-o7/RV_Board)
+![GitHub Contributors](https://img.shields.io/github/contributors/KTS-o7/RV_Board)
+![GitHub top language](https://img.shields.io/github/languages/top/KTS-o7/RV_Board)
+![GitHub](https://img.shields.io/github/license/KTS-o7/RV_Board)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FKTS-o7%2FRV_Board&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
 ## 1. Introduction
 
